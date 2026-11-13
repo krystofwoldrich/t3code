@@ -126,9 +126,9 @@ function getAppStateFromPath(path: string, options: Parameters<typeof getStateFr
 const appLinking = {
   prefixes: [
     Linking.createURL("/"),
-    "t3code://",
-    "t3code-dev://",
-    "t3code-preview://",
+    "t3code-kw://",
+    "t3code-kw-dev://",
+    "t3code-kw-preview://",
     DEFAULT_HOSTED_APP_URL,
   ],
   config: { initialRouteName: "Home" },

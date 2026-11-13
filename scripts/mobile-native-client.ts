@@ -19,6 +19,8 @@ import { Argument, Command, Flag } from "effect/cli";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
+import { MOBILE_APP_IDENTITY } from "../apps/mobile/app.identity.ts";
+
 export type NativePlatform = "ios" | "android";
 const NativeClientRecord = Schema.Struct({ fingerprint: Schema.String, binary: Schema.String });
 const encodeRecord = Schema.encodeEffect(Schema.fromJsonString(NativeClientRecord));
@@ -135,7 +137,7 @@ export const hashBundle = Effect.fn("hashBundle")(function* (root: string) {
 });
 type FileSystemError = import("effect/PlatformError").PlatformError;
 
-const bundleId = "com.t3tools.t3code.dev";
+const bundleId = `${MOBILE_APP_IDENTITY.bundleIdentifier}.dev`;
 const roots = Effect.gen(function* () {
   const path = yield* Path.Path;
   const repo = yield* path.fromFileUrl(new URL("../", import.meta.url));
@@ -627,7 +629,7 @@ const publish = Effect.fn("nativeClient.publish")(function* (staging: string, ta
   yield* fs.rename(staging, target);
 });
 
-const easCli = "eas-cli@25.3.0";
+const easCli = "eas-cli@27.9.0";
 
 /** Xcode builds iOS locally; without it (Linux, or a Mac with no Xcode) EAS builds in the cloud. */
 const hasXcode = Effect.gen(function* () {
@@ -1164,7 +1166,7 @@ const installIntoSession = Effect.fn("nativeClient.installIntoSession")(function
         agentDevice,
         "open",
         bundleId,
-        `t3code-dev://expo-development-client/?url=${url}&disableOnboarding=1&disableFab=1&disableAutoLaunch=1`,
+        `${MOBILE_APP_IDENTITY.scheme}-dev://expo-development-client/?url=${url}&disableOnboarding=1&disableFab=1&disableAutoLaunch=1`,
         "--session",
         session,
       ],

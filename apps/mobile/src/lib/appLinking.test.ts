@@ -10,12 +10,18 @@ import {
 } from "./appLinking";
 
 describe("shouldHandleAppLink", () => {
-  it.each(["t3code://", "t3code:///", "t3code-dev://", "t3code-preview://"])(
-    "ignores scheme-only URL %s",
-    (url) => {
-      expect(shouldHandleAppLink(url, true)).toBe(false);
-    },
-  );
+  it.each([
+    "t3code://",
+    "t3code:///",
+    "t3code-dev://",
+    "t3code-preview://",
+    "t3code-kw://",
+    "t3code-kw:///",
+    "t3code-kw-dev://",
+    "t3code-kw-preview://",
+  ])("ignores scheme-only URL %s", (url) => {
+    expect(shouldHandleAppLink(url, true)).toBe(false);
+  });
 
   it.each([
     "t3code://threads/env-1/thread-1",

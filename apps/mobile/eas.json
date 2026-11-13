@@ -1,12 +1,14 @@
 {
   "cli": {
-    "version": ">= 18.4.0",
+    "version": ">= 27.9.0",
     "appVersionSource": "remote",
     "promptToConfigurePushNotifications": false
   },
   "build": {
     "development": {
       "corepack": true,
+      "node": "26.12.1",
+      "environment": "development",
       "env": {
         "APP_VARIANT": "development",
         "NODE_OPTIONS": "--max-old-space-size=4096"
@@ -20,6 +22,7 @@
     },
     "development-simulator": {
       "extends": "development",
+      "autoIncrement": false,
       "ios": {
         "simulator": true,
         "image": "macos-tahoe-26.6-xcode-27.1"
@@ -64,6 +67,7 @@
     },
     "production": {
       "corepack": true,
+      "node": "26.12.1",
       "env": {
         "APP_VARIANT": "production",
         "NODE_OPTIONS": "--max-old-space-size=4096",
@@ -79,18 +83,17 @@
       "ios": {
         "image": "macos-tahoe-26.6-xcode-27.1"
       }
-    }
-  },
-  "submit": {
-    "testflight": {
-      "extends": "production"
     },
-    "production": {
-      "ios": {
-        "ascAppId": "6787819824"
+    "internal": {
+      "extends": "production",
+      "environment": "preview",
+      "distribution": "internal",
+      "channel": "kw-internal",
+      "env": {
+        "MOBILE_VERSION_POLICY": "appVersion"
       },
-      "android": {
-        "track": "internal"
+      "ios": {
+        "simulator": false
       }
     }
   }

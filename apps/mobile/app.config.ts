@@ -1,7 +1,7 @@
 import type { ExpoConfig } from "expo/config";
 
-import { BRAND_ASSET_PATHS } from "../../scripts/lib/brand-assets.ts";
 import { loadRepoEnv } from "../../scripts/lib/public-config.ts";
+import { MOBILE_APP_IDENTITY } from "./app.identity.ts";
 
 type AppVariant = "development" | "preview" | "production";
 
@@ -19,11 +19,8 @@ const runtimeVersionPolicy =
 const personalTeamBundleIdentifier = repoEnv.T3CODE_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim();
 const IOS_BUNDLE_IDENTIFIER_PATTERN = /^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
 
-// Compiled into the native project. Without a relay, Observe's native side could dispatch to
-// Expo's own ingest before observe.ts turns it off; `.invalid` never resolves (RFC 6761).
-const observeEndpointUrl = repoEnv.T3CODE_RELAY_URL?.trim()
-  ? new URL("/v1/mobile/observe", repoEnv.T3CODE_RELAY_URL.trim()).toString()
-  : "https://observe.invalid";
+// This fork uses direct connections; .invalid also prevents native Observe ingestion.
+const observeEndpointUrl = "https://observe.invalid";
 
 const fromRepoRoot = (relativePath: string) => `../../${relativePath}`;
 const androidAdaptiveForeground = "./assets/android-icon-foreground.png";
@@ -39,9 +36,6 @@ if (
 }
 
 const DEVELOPMENT_ASSETS = {
-  appIcon: fromRepoRoot(BRAND_ASSET_PATHS.developmentIosIconPng),
-  iosIcon: fromRepoRoot(BRAND_ASSET_PATHS.developmentIconComposerProject),
-  splashIcon: fromRepoRoot(BRAND_ASSET_PATHS.developmentIosIconPng),
   androidAdaptiveForeground,
   androidAdaptiveBackgroundColor: "#347FF8",
   androidAdaptiveBackgroundImage: "./assets/android-icon-background-dev.png",
@@ -52,9 +46,6 @@ const DEVELOPMENT_ASSETS = {
 } as const;
 
 const PREVIEW_ASSETS = {
-  appIcon: fromRepoRoot(BRAND_ASSET_PATHS.nightlyIosIconPng),
-  iosIcon: fromRepoRoot(BRAND_ASSET_PATHS.nightlyIconComposerProject),
-  splashIcon: fromRepoRoot(BRAND_ASSET_PATHS.nightlyIosIconPng),
   androidAdaptiveForeground,
   androidAdaptiveBackgroundColor: "#111533",
   androidAdaptiveBackgroundImage: "./assets/android-icon-background-nightly.png",
@@ -65,9 +56,6 @@ const PREVIEW_ASSETS = {
 } as const;
 
 const RELEASE_ASSETS = {
-  appIcon: fromRepoRoot(BRAND_ASSET_PATHS.productionIosIconPng),
-  iosIcon: fromRepoRoot(BRAND_ASSET_PATHS.productionIconComposerProject),
-  splashIcon: fromRepoRoot(BRAND_ASSET_PATHS.productionIosIconPng),
   androidAdaptiveForeground,
   androidAdaptiveBackgroundColor: "#000000",
   androidAdaptiveBackgroundImage: undefined,
@@ -79,27 +67,24 @@ const RELEASE_ASSETS = {
 
 const VARIANT_CONFIG = {
   development: {
-    appName: "T3 Code Dev",
-    scheme: "t3code-dev",
-    iosBundleIdentifier: "com.t3tools.t3code.dev",
-    androidPackage: "com.t3tools.t3code.dev",
-    relyingParty: "clerk.t3.codes",
+    appName: `${MOBILE_APP_IDENTITY.name} Dev`,
+    scheme: `${MOBILE_APP_IDENTITY.scheme}-dev`,
+    iosBundleIdentifier: `${MOBILE_APP_IDENTITY.bundleIdentifier}.dev`,
+    androidPackage: `${MOBILE_APP_IDENTITY.bundleIdentifier}.dev`,
     assets: DEVELOPMENT_ASSETS,
   },
   preview: {
-    appName: "T3 Code Preview",
-    scheme: "t3code-preview",
-    iosBundleIdentifier: "com.t3tools.t3code.preview",
-    androidPackage: "com.t3tools.t3code.preview",
-    relyingParty: "clerk.t3.codes",
+    appName: `${MOBILE_APP_IDENTITY.name} Preview`,
+    scheme: `${MOBILE_APP_IDENTITY.scheme}-preview`,
+    iosBundleIdentifier: `${MOBILE_APP_IDENTITY.bundleIdentifier}.preview`,
+    androidPackage: `${MOBILE_APP_IDENTITY.bundleIdentifier}.preview`,
     assets: PREVIEW_ASSETS,
   },
   production: {
-    appName: "T3 Code",
-    scheme: "t3code",
-    iosBundleIdentifier: "com.t3tools.t3code",
-    androidPackage: "com.t3tools.t3code",
-    relyingParty: "clerk.t3.codes",
+    appName: MOBILE_APP_IDENTITY.name,
+    scheme: MOBILE_APP_IDENTITY.scheme,
+    iosBundleIdentifier: MOBILE_APP_IDENTITY.bundleIdentifier,
+    androidPackage: MOBILE_APP_IDENTITY.bundleIdentifier,
     assets: RELEASE_ASSETS,
   },
 } as const;
@@ -118,8 +103,7 @@ function resolveAppVariant(value: string | undefined): AppVariant {
 }
 
 const variant = VARIANT_CONFIG[APP_VARIANT];
-// Copied thread links open the app. app.t3.codes/.well-known lists every variant's identifiers.
-const HOSTED_APP_HOST = "app.t3.codes";
+const forkIcon = fromRepoRoot("assets/fork/kw-ios-1024.png");
 const iosBundleIdentifier = isIosPersonalTeamBuild
   ? personalTeamBundleIdentifier!
   : variant.iosBundleIdentifier;
@@ -234,7 +218,7 @@ const sharingPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
 
 const config: ExpoConfig = {
   name: variant.appName,
-  slug: "t3-code",
+  slug: MOBILE_APP_IDENTITY.slug,
   platforms: ["ios", "android"],
   scheme: variant.scheme,
   version: repoEnv.T3CODE_MOBILE_VERSION ?? "2.3.0",
@@ -243,28 +227,24 @@ const config: ExpoConfig = {
     policy: runtimeVersionPolicy,
   },
   orientation: "portrait",
-  icon: variant.assets.appIcon,
+  icon: forkIcon,
   userInterfaceStyle: "automatic",
   updates: {
     enabled: repoEnv.T3CODE_MOBILE_UPDATES_ENABLED !== "0",
-    url: "https://u.expo.dev/d763fcb8-d37c-41ea-a773-b54a0ab4a454",
+    url: `https://u.expo.dev/${MOBILE_APP_IDENTITY.projectId}`,
     checkAutomatically: "ON_LOAD",
     fallbackToCacheTimeout: 0,
   },
   ios: {
-    icon: variant.assets.iosIcon,
+    icon: fromRepoRoot("assets/fork/app-icon.icon"),
     supportsTablet: true,
     requireFullScreen: process.env.T3_SHOWCASE_CAPTURE_BUILD === "1",
     bundleIdentifier: iosBundleIdentifier,
     // Avoid Personal Team fallback: it cannot sign App Groups, Apple sign-in or push entitlements.
-    appleTeamId: "ARK85ZXQ4Z",
-    associatedDomains: [
-      `applinks:${variant.relyingParty}`,
-      `webcredentials:${variant.relyingParty}`,
-      `applinks:${HOSTED_APP_HOST}`,
-    ],
+    appleTeamId: MOBILE_APP_IDENTITY.appleTeamId,
+    associatedDomains: [],
     entitlements: {
-      "keychain-access-groups": [`$(AppIdentifierPrefix)${variant.iosBundleIdentifier}`],
+      "keychain-access-groups": [`$(AppIdentifierPrefix)${iosBundleIdentifier}`],
     },
     infoPlist: {
       UISupportedInterfaceOrientations: [
@@ -295,7 +275,7 @@ const config: ExpoConfig = {
     },
   },
   android: {
-    icon: variant.assets.appIcon,
+    icon: forkIcon,
     package: variant.androidPackage,
     ...(repoEnv.T3CODE_ANDROID_GOOGLE_SERVICES_FILE
       ? { googleServicesFile: repoEnv.T3CODE_ANDROID_GOOGLE_SERVICES_FILE }
@@ -312,17 +292,10 @@ const config: ExpoConfig = {
     predictiveBackGestureEnabled: true,
     // expo-sensors declares this for its pedometer, which the app does not use.
     blockedPermissions: ["android.permission.ACTIVITY_RECOGNITION"],
-    intentFilters: [
-      {
-        action: "VIEW",
-        autoVerify: true,
-        data: [{ scheme: "https", host: HOSTED_APP_HOST, pathPrefix: "/threads/" }],
-        category: ["BROWSABLE", "DEFAULT"],
-      },
-    ],
+    intentFilters: [],
   },
   web: {
-    favicon: variant.assets.appIcon,
+    favicon: forkIcon,
   },
   plugins: [
     "expo-asset",
@@ -363,8 +336,8 @@ const config: ExpoConfig = {
         mode: APP_VARIANT === "development" ? "development" : "production",
       },
     ],
-    // Gate Clerk here: withoutIosPersonalTeamCapabilities runs too early to strip its entitlement.
-    ["@clerk/expo", { theme: "./clerk-theme.json", appleSignIn: !isIosPersonalTeamBuild }],
+    ["@clerk/expo", { theme: "./clerk-theme.json", appleSignIn: false }],
+    ["expo-dev-client", { addGeneratedScheme: false }],
     "expo-web-browser",
     [
       "expo-quick-actions",
@@ -409,12 +382,12 @@ const config: ExpoConfig = {
     [
       "expo-splash-screen",
       {
-        image: variant.assets.splashIcon,
+        image: forkIcon,
         resizeMode: "contain",
         backgroundColor: "#ffffff",
         imageWidth: 220,
         dark: {
-          image: variant.assets.splashIcon,
+          image: forkIcon,
           backgroundColor: "#0a0a0a",
         },
         android: {
@@ -469,28 +442,23 @@ const config: ExpoConfig = {
     ),
     iosPersonalTeamBuild: isIosPersonalTeamBuild,
     relay: {
-      url: repoEnv.T3CODE_RELAY_URL ?? null,
+      url: null,
     },
     clerk: {
-      publishableKey: repoEnv.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? null,
-      jwtTemplate: repoEnv.EXPO_PUBLIC_CLERK_JWT_TEMPLATE ?? null,
+      publishableKey: null,
+      jwtTemplate: null,
     },
-    // Clerk reads these exact names at prebuild. Omit unset values: manifest null becomes truthy {}.
-    EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: repoEnv.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID,
-    EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: repoEnv.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID,
-    EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID: repoEnv.EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID,
-    EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: repoEnv.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME,
     observability: {
       tracesUrl: repoEnv.EXPO_PUBLIC_OTLP_TRACES_URL ?? "https://api.axiom.co/v1/traces",
       tracesDataset: repoEnv.EXPO_PUBLIC_OTLP_TRACES_DATASET ?? null,
       tracesToken: repoEnv.EXPO_PUBLIC_OTLP_TRACES_TOKEN ?? null,
     },
     eas: {
-      projectId: "d763fcb8-d37c-41ea-a773-b54a0ab4a454",
+      projectId: MOBILE_APP_IDENTITY.projectId,
       observe: { endpointUrl: observeEndpointUrl },
     },
   },
-  owner: "pingdotgg",
+  owner: MOBILE_APP_IDENTITY.owner,
   experiments: {
     // Metro only runs babel-plugin-react-compiler when this is set; see src/reactCompilerCoverage.test.ts.
     reactCompiler: true,

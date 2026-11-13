@@ -7,12 +7,13 @@ import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
+import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.ts";
 import { APP_DIR, MOBILE, MOBILE_T3_HOME } from "../e2e.config.ts";
 import { run, ScenarioError } from "./shell.ts";
 import { makeState, runPromise, type T3State } from "./t3.ts";
 
-const APP_ID = "com.t3tools.t3code.dev";
-const SCHEME = "t3code-dev";
+const APP_ID = `${MOBILE_APP_IDENTITY.bundleIdentifier}.dev`;
+const SCHEME = `${MOBILE_APP_IDENTITY.scheme}-dev`;
 
 export interface MobileT3 extends T3State {
   /** Installs the dev client if the device lacks it, loads it from Metro, and pairs it. */

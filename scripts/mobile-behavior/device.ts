@@ -15,6 +15,7 @@ import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import { Socket } from "effect/socket";
 
+import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.ts";
 import { poolError } from "../mobile-e2e/device.ts";
 
 const InspectorTargets = Schema.Array(
@@ -29,8 +30,8 @@ export class DeviceError extends Schema.TaggedError<DeviceError>()("DeviceError"
   message: Schema.String,
 }) {}
 
-export const APP_ID = "com.t3tools.t3code.dev";
-export const SCHEME = "t3code-dev";
+export const APP_ID = `${MOBILE_APP_IDENTITY.bundleIdentifier}.dev`;
+export const SCHEME = `${MOBILE_APP_IDENTITY.scheme}-dev`;
 
 export interface ProbeState {
   readonly route: {

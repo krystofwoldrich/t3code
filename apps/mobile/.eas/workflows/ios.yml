@@ -1,0 +1,22 @@
+name: Fork iOS Builds
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  simulator:
+    name: iPhone and iPad simulator
+    type: build
+    environment: development
+    params:
+      platform: ios
+      profile: development-simulator
+
+  internal:
+    name: Internal iOS distribution
+    type: build
+    environment: preview
+    params:
+      platform: ios
+      profile: internal

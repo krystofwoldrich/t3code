@@ -5,10 +5,13 @@ import * as NodePath from "node:path";
 import * as NodeProcess from "node:process";
 import * as Schema from "effect/Schema";
 
+import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.ts";
+
 import type { Snapshot } from "./checks.ts";
 import type { Pose } from "./poses.ts";
 
-export const BUNDLE_ID = "com.t3tools.t3code.dev";
+export const BUNDLE_ID = `${MOBILE_APP_IDENTITY.bundleIdentifier}.dev`;
+export const SCHEME = `${MOBILE_APP_IDENTITY.scheme}-dev`;
 
 export interface RunResult {
   readonly code: number;
@@ -181,7 +184,7 @@ export class Device {
       [
         "open",
         BUNDLE_ID,
-        `t3code-dev://expo-development-client/?url=${url}&disableOnboarding=1&disableFab=1&disableAutoLaunch=1`,
+        `${SCHEME}://expo-development-client/?url=${url}&disableOnboarding=1&disableFab=1&disableAutoLaunch=1`,
         // A real keyboard, so the layout under it is what people see.
         ...(this.pose.platform === "android" ? ["--no-test-ime"] : []),
       ],
