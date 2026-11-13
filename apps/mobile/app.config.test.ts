@@ -12,6 +12,7 @@ afterEach(() => {
 async function loadConfig(variant: string | undefined) {
   vi.resetModules();
   vi.stubEnv("APP_VARIANT", variant);
+  vi.stubEnv("T3_SHOWCASE_CAPTURE_BUILD", undefined);
   return (await import("./app.config.ts")).default;
 }
 
@@ -31,11 +32,16 @@ it.each([
   expect(config.ios?.bundleIdentifier).toBe(identifier);
   expect(config.android?.package).toBe(identifier);
   expect(config.scheme).toBe(scheme);
+  expect(config.name.startsWith("T3 Code KW")).toBe(true);
+  expect(config.slug).toBe("t3-code-kw");
+  expect(config.icon).toBe("../../assets/fork/kw-ios-1024.png");
+  expect(config.ios?.icon).toBe("../../assets/fork/app-icon.icon");
   expect(config.ios?.appleTeamId).toBe("9734H7B7Y9");
   expect(config.ios?.entitlements?.["keychain-access-groups"]).toEqual([
     `$(AppIdentifierPrefix)${identifier}`,
   ]);
   expect(config.ios?.supportsTablet).toBe(true);
+  expect(config.ios?.requireFullScreen).toBe(false);
   expect(config.ios?.associatedDomains).toEqual([]);
   expect(config.android?.intentFilters).toEqual([]);
   expect(config.owner).toBe("krystofwoldrich");

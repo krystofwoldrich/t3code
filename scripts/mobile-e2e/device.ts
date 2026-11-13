@@ -5,7 +5,7 @@ import * as NodePath from "node:path";
 import * as NodeProcess from "node:process";
 import * as Schema from "effect/Schema";
 
-import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.ts";
+import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.mts";
 
 import type { Snapshot } from "./checks.ts";
 import type { Pose } from "./poses.ts";

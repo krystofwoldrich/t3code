@@ -11,7 +11,7 @@ import * as Path from "effect/Path";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Schedule from "effect/Schedule";
 
-import { MOBILE_APP_IDENTITY } from "../apps/mobile/app.identity.ts";
+import { MOBILE_APP_IDENTITY } from "../apps/mobile/app.identity.mts";
 import { run, ScenarioError } from "./scenarios/shell.ts";
 
 // e2e loads this module for its values, so the paths and the host are resolved once, here.

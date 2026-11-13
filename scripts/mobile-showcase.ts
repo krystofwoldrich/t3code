@@ -11,7 +11,7 @@ import * as NodeURL from "node:url";
 
 import { PNG } from "pngjs";
 
-import { MOBILE_APP_IDENTITY } from "../apps/mobile/app.identity.ts";
+import { MOBILE_APP_IDENTITY } from "../apps/mobile/app.identity.mts";
 import showcaseConfig, {
   type ShowcaseAppearance,
   type ShowcaseAndroidDevice,

@@ -19,7 +19,7 @@ import { Argument, Command, Flag } from "effect/cli";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import { MOBILE_APP_IDENTITY } from "../apps/mobile/app.identity.ts";
+import { MOBILE_APP_IDENTITY } from "../apps/mobile/app.identity.mts";
 
 export type NativePlatform = "ios" | "android";
 const NativeClientRecord = Schema.Struct({ fingerprint: Schema.String, binary: Schema.String });

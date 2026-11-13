@@ -1,7 +1,7 @@
 # T3 Code KW iOS development
 
 This fork builds under [@krystofwoldrich/t3-code-kw](https://expo.dev/accounts/krystofwoldrich/projects/t3-code-kw)
-using Apple team `9734H7B7Y9`. [App identity](../../apps/mobile/app.identity.ts) owns the identifiers.
+using Apple team `9734H7B7Y9`. [App identity](../../apps/mobile/app.identity.mts) owns the identifiers.
 The installed T3 Code app can remain alongside both KW variants.
 
 Every push to this fork's `main` starts **Fork iOS Builds** in
@@ -61,3 +61,18 @@ Edit the vector layers in `assets/fork/app-icon.icon`; export the fallback PNG w
 ```
 
 Rebuild the native app after changing its identity, icon, entitlements, or native dependencies.
+
+## Upstream maintenance
+
+The **KW upstream sync** scheduled tasks run at 08:30 and 20:30 in this environment's time zone.
+Find them in **Settings → Scheduled tasks**; both post to the maintenance thread with a fresh
+agent session for each run. The server must be running at the scheduled time.
+
+The maintenance thread has its own worktree. `bash scripts/sync-upstream.sh` merges upstream
+into that worktree, installs dependencies, checks the KW app identity, and runs the changed-file
+checks. A clean, passing merge is committed and pushed to the fork's `main`, triggering EAS.
+Conflicts, failed checks, unpublished work, or a concurrent change to `main` leave the candidate
+in the maintenance worktree for review. The shared development checkout stays on its current commit.
+
+Use **Run now** on either scheduled task to trigger an extra run. Follow its destination thread
+for the fetched commit, validation result, any review needed, and the resulting EAS builds.

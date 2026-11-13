@@ -7,7 +7,7 @@ import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.ts";
+import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.mts";
 import { APP_DIR, MOBILE, MOBILE_T3_HOME } from "../e2e.config.ts";
 import { run, ScenarioError } from "./shell.ts";
 import { makeState, runPromise, type T3State } from "./t3.ts";

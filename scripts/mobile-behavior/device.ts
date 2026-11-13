@@ -15,7 +15,7 @@ import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import { Socket } from "effect/socket";
 
-import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.ts";
+import { MOBILE_APP_IDENTITY } from "../../apps/mobile/app.identity.mts";
 import { poolError } from "../mobile-e2e/device.ts";
 
 const InspectorTargets = Schema.Array(

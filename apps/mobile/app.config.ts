@@ -1,7 +1,7 @@
 import type { ExpoConfig } from "expo/config";
 
 import { loadRepoEnv } from "../../scripts/lib/public-config.ts";
-import { MOBILE_APP_IDENTITY } from "./app.identity.ts";
+import { MOBILE_APP_IDENTITY } from "./app.identity.mts";
 
 type AppVariant = "development" | "preview" | "production";
 
