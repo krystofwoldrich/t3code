@@ -70,9 +70,16 @@ agent session for each run. The server must be running at the scheduled time.
 
 The maintenance thread has its own worktree. `bash scripts/sync-upstream.sh` merges upstream
 into that worktree, installs dependencies, checks the KW app identity, and runs the changed-file
-checks. A clean, passing merge is committed and pushed to the fork's `main`, triggering EAS.
-Conflicts, failed checks, unpublished work, or a concurrent change to `main` leave the candidate
-in the maintenance worktree for review. The shared development checkout stays on its current commit.
+checks. The task resolves merge conflicts, resumes saved maintenance work, and pushes the sync
+to the fork's `main`, triggering both EAS builds. Dependency, identity-test, and changed-file
+check failures are reported as warnings rather than approval gates. Each changed-file check
+step is limited to five minutes; a timeout is also reported as a warning. The task preserves
+the KW app identity and build configuration while incorporating upstream fixes.
+
+The thread reports failed checks, conflict-resolution choices, and the build links. Only an
+unresolved merge, an inability to preserve the fork configuration, or an external Git/signing/build
+service problem can prevent completion; ordinary test failures do not require manual review.
+The shared development checkout stays on its current commit.
 
 Use **Run now** on either scheduled task to trigger an extra run. Follow its destination thread
-for the fetched commit, validation result, any review needed, and the resulting EAS builds.
+for the fetched commit, check results and warnings, and the resulting EAS builds.

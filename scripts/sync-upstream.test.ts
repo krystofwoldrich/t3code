@@ -19,7 +19,7 @@ function fixture() {
   NodeFS.mkdirSync(bin);
   NodeFS.writeFileSync(
     NodePath.join(bin, "vp"),
-    '#!/bin/sh\nif [ "$1" = run ] && [ "${TEST_FAIL_CHECKS:-0}" = 1 ]; then exit 1; fi\n',
+    '#!/bin/sh\nif [ "$1" = "${TEST_FAIL_STAGE:-}" ]; then exit 1; fi\n',
     { mode: 0o755 },
   );
   const env = {
@@ -69,10 +69,10 @@ function fixture() {
       git(source, "commit", "-m", "upstream change");
       git(source, "push", "origin", "main");
     },
-    run(cwd = worktree, failChecks = false) {
+    run(cwd = worktree, failStage = "") {
       return NodeChildProcess.spawnSync("bash", [script], {
         cwd,
-        env: { ...env, TEST_FAIL_CHECKS: failChecks ? "1" : "0" },
+        env: { ...env, TEST_FAIL_STAGE: failStage },
         encoding: "utf8",
       });
     },
@@ -111,31 +111,40 @@ it("keeps a conflicting upstream merge off remote main", () => {
   expect(result.status).toBe(2);
   expect(repo.git(repo.origin, "rev-parse", "main")).toBe(before);
   expect(repo.git(repo.worktree, "diff", "--name-only", "--diff-filter=U")).toBe("shared.txt");
+  NodeFS.writeFileSync(NodePath.join(repo.worktree, "shared.txt"), "fork and upstream version\n");
+  repo.git(repo.worktree, "add", "shared.txt");
+  repo.git(repo.worktree, "commit", "-m", "resolve upstream merge");
+  const resumed = repo.run();
+  expect(resumed.status, resumed.stderr).toBe(0);
+  expect(resumed.stdout).toContain("PUSHED:");
+  expect(repo.git(repo.origin, "show", "main:shared.txt")).toBe("fork and upstream version");
 });
 
-it("preserves a candidate without publishing when validation fails", () => {
+it.each([
+  ["i", "dependency install"],
+  ["test", "KW identity tests"],
+  ["run", "changed-file checks"],
+])("publishes with a reported warning when %s fails", (stage, label) => {
   using repo = fixture();
   repo.changeUpstream();
-  const result = repo.run(repo.worktree, true);
-  expect(result.status).toBe(3);
-  expect(repo.git(repo.origin, "rev-parse", "main")).toBe(repo.forkHead);
-  expect(NodeFS.readFileSync(NodePath.join(repo.worktree, "upstream.txt"), "utf8")).toBe(
-    "upstream change\n",
-  );
-  expect(repo.git(repo.worktree, "rev-parse", "--verify", "MERGE_HEAD")).toBeTruthy();
+  const result = repo.run(repo.worktree, stage);
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stdout).toContain("PUSHED:");
+  expect(result.stderr).toContain(`WARNING: ${label} failed (exit 1)`);
+  expect(repo.git(repo.origin, "show", "main:upstream.txt")).toBe("upstream change");
+  expect(repo.git(repo.origin, "show", "main:fork.txt")).toBe("KW customization");
+  expect(repo.git(repo.origin, "log", "-1", "--format=%B")).toContain(`${label}: FAIL (exit 1)`);
 });
 
-it("refuses the shared checkout and unpublished work", () => {
+it("refuses the shared checkout and unsaved work", () => {
   using repo = fixture();
   repo.changeUpstream();
   expect(repo.run(repo.checkout).status).toBe(1);
   NodeFS.writeFileSync(NodePath.join(repo.worktree, "pending.txt"), "pending review\n");
   expect(repo.run().status).toBe(1);
-  repo.git(repo.worktree, "add", ".");
-  repo.git(repo.worktree, "commit", "-m", "pending review");
-  const pending = repo.git(repo.worktree, "rev-parse", "HEAD");
-  expect(repo.run().status).toBe(1);
-  expect(repo.git(repo.worktree, "rev-parse", "HEAD")).toBe(pending);
+  expect(NodeFS.readFileSync(NodePath.join(repo.worktree, "pending.txt"), "utf8")).toBe(
+    "pending review\n",
+  );
   expect(repo.git(repo.origin, "rev-parse", "main")).toBe(repo.forkHead);
 });
 
